@@ -1,0 +1,361 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+#gr{font-family:'Syne',sans-serif;background:#070710;width:100%;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid #1a1a2e}
+#arena{position:relative;width:100%;height:400px;overflow:hidden;background:radial-gradient(ellipse at 50% 100%,#0d0d22 0%,#070710 70%)}
+#grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(80,60,200,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(80,60,200,0.04) 1px,transparent 1px);background-size:40px 40px;z-index:0}
+#glow-bottom{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(120,80,255,0.08));z-index:1;pointer-events:none}
+#danger-zone{position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,#ef444455,#ef4444,#ef444455,transparent);z-index:2}
+#wlayer{position:absolute;inset:0;z-index:3}
+#flash{position:absolute;inset:0;z-index:4;opacity:0;background:rgba(239,68,68,0.12);pointer-events:none;transition:opacity 0.15s}
+#overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(7,7,16,0.88);backdrop-filter:blur(4px)}
+#obox{background:#0e0e1f;border:1px solid #2a2040;border-radius:16px;padding:32px 40px;text-align:center;width:340px}
+#obox h1{font-size:28px;font-weight:800;color:#a78bfa;margin-bottom:6px;letter-spacing:-0.5px}
+#obox .sub{font-size:12px;color:#5a5a7a;line-height:1.7;margin-bottom:20px}
+#obox .sub strong{color:#c8c4e8}
+#obox .big{font-size:52px;font-weight:800;color:#a78bfa;line-height:1}
+#obox .lbl{font-size:11px;color:#4a4a6a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:20px}
+.speed-sel{display:flex;gap:8px;justify-content:center;margin-bottom:20px}
+.spd-btn{background:#0d0d20;border:1px solid #2a2a40;border-radius:9px;color:#5a5a7a;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:8px 16px;cursor:pointer;transition:all 0.15s;position:relative}
+.spd-btn:hover{border-color:#4a4a70;color:#a0a0c0}
+.spd-btn.active{border-color:#7c6ef0;color:#a78bfa;background:#1a1535}
+.spd-btn .spd-dot{width:6px;height:6px;border-radius:50%;margin:0 auto 4px;background:currentColor;opacity:0.6}
+.btn{background:#3d2fa8;color:#e8e6f0;border:none;border-radius:10px;padding:11px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:background 0.15s,transform 0.1s}
+.btn:hover{background:#5b4fcf;transform:translateY(-1px)}
+#hud{background:#0a0a18;border-top:1px solid #14142a;padding:10px 16px 6px;display:flex;flex-direction:column;gap:7px}
+#row1{display:flex;align-items:center;gap:12px;font-size:12px;color:#44446a}
+.st{display:flex;align-items:center;gap:5px;font-size:12px;color:#44446a}
+.sv{font-weight:700;color:#c8c4e8;font-size:15px;font-family:'JetBrains Mono',monospace}
+#lbar{flex:1;height:5px;background:#12122a;border-radius:3px;overflow:hidden}
+#lfill{height:100%;border-radius:3px;background:linear-gradient(90deg,#4f3dd0,#a855f7);transition:width 0.35s cubic-bezier(.4,0,0,.9)}
+#cmb{font-size:12px;font-weight:700;color:#f0c060;min-width:72px;text-align:right;font-family:'JetBrains Mono',monospace}
+#lv{display:flex;gap:3px;align-items:center}
+.hrt{font-size:15px;line-height:1;transition:opacity 0.2s}
+.hrt.off{opacity:0.12}
+#row-speed{display:flex;align-items:center;gap:8px}
+#speed-label{font-size:10px;color:#2e2e50;letter-spacing:.08em;white-space:nowrap}
+#speed-track{flex:1;position:relative;height:28px;display:flex;align-items:center}
+#speed-range{width:100%;accent-color:#7c6ef0;height:4px;cursor:pointer}
+#speed-range::-webkit-slider-thumb{width:18px;height:18px}
+.speed-tags{display:flex;justify-content:space-between;font-size:10px;color:#2a2a48;font-family:'JetBrains Mono',monospace;padding:0 2px}
+#speed-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;min-width:44px;text-align:right}
+#row2{display:flex;align-items:center;gap:10px;min-height:30px}
+#tdisp{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;letter-spacing:0.06em;flex:1;min-height:24px}
+#tdisp .d{color:#22c55e}
+#tdisp .r{color:#383858}
+#tdisp .c{color:#a78bfa;border-bottom:2px solid #a78bfa}
+#row3{display:flex;justify-content:center;gap:4px;padding:2px 0}
+.key{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;background:#0d0d20;border:1px solid #1e1e35;color:#3a3a5a;transition:all 0.08s;position:relative}
+.key::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:transparent}
+.key.fkey::after,.key.jkey::after{background:#252540}
+.key.hit{background:#1a2e1a;border-color:#22c55e;color:#22c55e;transform:scale(0.88)}
+.key.miss{background:#2e1a1a;border-color:#ef4444;color:#ef4444;transform:scale(0.88)}
+#hint{font-size:10px;color:#1e1e38;text-align:center;letter-spacing:0.05em;padding-bottom:2px}
+.word{position:absolute;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:0.04em;padding:5px 11px;border-radius:7px;pointer-events:none;white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,#4f3dd0 var(--pct,50%),#1e1e35 var(--pct,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#a78bfa;border:2px solid #0a0a18;margin-top:-6px;cursor:pointer}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#1e1e35}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#a78bfa;border:2px solid #0a0a18;cursor:pointer}
+</style>
+
+<div id="gr">
+  <div id="arena">
+    <div id="grid-lines"></div>
+    <div id="glow-bottom"></div>
+    <div id="danger-zone"></div>
+    <div id="wlayer"></div>
+    <div id="flash"></div>
+    <div id="overlay">
+      <div id="obox">
+        <h1 id="otitle">Home Row Hero</h1>
+        <div class="sub" id="osub">Type falling words using only home row keys:<br><strong>a s d f g h j k l ;</strong></div>
+        <div id="oscore" style="display:none"><div class="big" id="ofinal">0</div><div class="lbl">final score</div></div>
+        <div style="margin-bottom:6px;font-size:11px;color:#3a3a5a;letter-spacing:.08em">SELECT SPEED</div>
+        <div class="speed-sel" id="preset-btns">
+          <button class="spd-btn" data-v="0.5"><div class="spd-dot"></div>Slow</button>
+          <button class="spd-btn active" data-v="1"><div class="spd-dot"></div>Normal</button>
+          <button class="spd-btn" data-v="1.6"><div class="spd-dot"></div>Fast</button>
+          <button class="spd-btn" data-v="2.4"><div class="spd-dot"></div>Insane</button>
+        </div>
+        <button class="btn" id="obtn">▶ Start</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="row1">
+      <div class="st">LVL <span class="sv" id="slv">1</span></div>
+      <div id="lbar"><div id="lfill" style="width:0%"></div></div>
+      <div class="st">SCORE <span class="sv" id="ssc">0</span></div>
+      <div class="st">WPM <span class="sv" id="swpm">0</span></div>
+      <div id="cmb"></div>
+      <div id="lv"></div>
+    </div>
+
+    <div id="row-speed">
+      <span id="speed-label">SPEED</span>
+      <div id="speed-track">
+        <input type="range" id="speed-range" min="1" max="10" step="1" value="5">
+      </div>
+      <div class="speed-tags" style="display:none" id="stags">
+        <span>slow</span><span>normal</span><span>insane</span>
+      </div>
+      <span id="speed-val" style="color:#a78bfa">×1.0</span>
+      <div style="display:flex;gap:4px;margin-left:4px">
+        <button class="spd-btn" data-v="0.5" style="padding:4px 8px;font-size:11px">Slow</button>
+        <button class="spd-btn active" data-v="1" style="padding:4px 8px;font-size:11px" id="norm-btn">Norm</button>
+        <button class="spd-btn" data-v="1.6" style="padding:4px 8px;font-size:11px">Fast</button>
+        <button class="spd-btn" data-v="2.4" style="padding:4px 8px;font-size:11px">💀</button>
+      </div>
+    </div>
+
+    <div id="row2">
+      <span style="font-size:10px;color:#2a2a48;letter-spacing:.08em">TYPE</span>
+      <div id="tdisp"><span class="r">start typing a word...</span></div>
+    </div>
+    <div id="row3"></div>
+    <div id="hint">index fingers rest on F · J (bumped keys)</div>
+  </div>
+</div>
+
+<script>
+const HR='asdfghjkl;';
+const RAW=['as','ash','had','has','lad','lass','gash','half','hall','glad','flag','flask','flash','slag','sash','dash','fall','falls','glass','shall','shag','hags','jag','gas','fads','lads','jags','gals','lahs','dahs','ahs','salads','flasks','alfalfa','flags','dahl','gal','lag','gad','ads','sad','dal','ala','all','add','dull','hull','jell','fell','gall','tall','flak','glad','slab','slag','kahals','jakals','flashlag'];
+const EXTRA=[];
+for(const a of HR)for(const b of HR)for(const c of HR){const w=a+b+c;EXTRA.push(w);}
+const WORDS=[...new Set([...RAW,...EXTRA])].filter(w=>w.length>=2&&w.length<=8&&w.split('').every(c=>HR.includes(c)));
+const COLORS=['#7c6ef0','#22d3ee','#34d399','#f472b6','#fb923c','#60a5fa','#a78bfa','#4ade80','#facc15','#e879f9'];
+
+const wlayer=document.getElementById('wlayer');
+const overlay=document.getElementById('overlay');
+const otitle=document.getElementById('otitle');
+const osub=document.getElementById('osub');
+const oscore=document.getElementById('oscore');
+const ofinal=document.getElementById('ofinal');
+const obtn=document.getElementById('obtn');
+const slv=document.getElementById('slv');
+const ssc=document.getElementById('ssc');
+const swpm=document.getElementById('swpm');
+const cmbEl=document.getElementById('cmb');
+const lvEl=document.getElementById('lv');
+const tdisp=document.getElementById('tdisp');
+const lfill=document.getElementById('lfill');
+const flash=document.getElementById('flash');
+const row3=document.getElementById('row3');
+const speedRange=document.getElementById('speed-range');
+const speedVal=document.getElementById('speed-val');
+
+let speedMult=1.0;
+let S=null,raf=null,last=0,wpmT=0;
+
+// speed range map: 1-10 → 0.3x to 3x
+function rangeToMult(v){return+(0.3+((v-1)/9)*2.7).toFixed(2);}
+function multToColor(m){
+  if(m<=0.6)return'#22d3ee';
+  if(m<=1.2)return'#a78bfa';
+  if(m<=2.0)return'#fb923c';
+  return'#ef4444';
+}
+function updateSpeedUI(m){
+  speedMult=m;
+  const pct=((m-0.3)/2.7*100).toFixed(1);
+  speedRange.style.setProperty('--pct',pct+'%');
+  const col=multToColor(m);
+  speedVal.textContent='×'+m.toFixed(1);
+  speedVal.style.color=col;
+  // sync range thumb
+  const rv=Math.round(((m-0.3)/2.7)*9+1);
+  speedRange.value=Math.max(1,Math.min(10,rv));
+  speedRange.style.setProperty('--pct',(((rv-1)/9)*100)+'%');
+  // update active preset buttons in HUD
+  document.querySelectorAll('#row-speed .spd-btn').forEach(b=>{
+    b.classList.toggle('active',parseFloat(b.dataset.v)===m);
+  });
+  document.querySelectorAll('#preset-btns .spd-btn').forEach(b=>{
+    b.classList.toggle('active',parseFloat(b.dataset.v)===m);
+  });
+}
+
+speedRange.addEventListener('input',()=>{
+  const m=rangeToMult(parseInt(speedRange.value));
+  updateSpeedUI(m);
+  if(S)S.speedMult=speedMult;
+});
+
+document.querySelectorAll('.spd-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const v=parseFloat(b.dataset.v);
+    updateSpeedUI(v);
+    if(S)S.speedMult=speedMult;
+  });
+});
+
+updateSpeedUI(1.0);
+
+function buildKB(){
+  row3.innerHTML='';
+  for(const k of HR){
+    const d=document.createElement('div');
+    d.className='key'+(k==='f'?' fkey':k==='j'?' jkey':'');
+    d.id='k'+k;d.textContent=k;
+    row3.appendChild(d);
+  }
+}
+buildKB();
+
+function kflash(k,type){
+  const el=document.getElementById('k'+k);
+  if(!el)return;
+  el.classList.add(type);
+  setTimeout(()=>el.classList.remove(type),160);
+}
+
+function setLives(n){
+  lvEl.innerHTML='';
+  for(let i=0;i<3;i++){
+    const s=document.createElement('span');
+    s.className='hrt'+(i>=n?' off':'');
+    s.textContent='♥';
+    lvEl.appendChild(s);
+  }
+}
+
+function getTarget(){
+  if(!S||!S.words.length)return null;
+  const inp=S.inp;
+  if(!inp)return null;
+  return S.words.find(w=>w.text.startsWith(inp))||null;
+}
+
+function renderCursor(){
+  const tgt=getTarget();
+  const inp=S?S.inp:'';
+  if(!tgt){
+    if(!inp)tdisp.innerHTML='<span class="r">start typing a word...</span>';
+    else tdisp.innerHTML='<span style="color:#ef444488">'+inp+'</span><span class="r"> — no match</span>';
+    S&&S.words.forEach(w=>{w.el.style.boxShadow='';w.el.style.borderColor=w.color+'33';});
+    return;
+  }
+  let h='';
+  for(let i=0;i<tgt.text.length;i++){
+    const c=tgt.text[i];
+    if(i<inp.length)h+=`<span class="d">${c}</span>`;
+    else if(i===inp.length)h+=`<span class="c">${c}</span>`;
+    else h+=`<span class="r">${c}</span>`;
+  }
+  tdisp.innerHTML=h;
+  S.words.forEach(w=>{
+    if(w===tgt){w.el.style.boxShadow='0 0 16px '+w.color+'88';w.el.style.borderColor=w.color+'99';}
+    else{w.el.style.boxShadow='';w.el.style.borderColor=w.color+'33';}
+  });
+}
+
+function showCombo(n){cmbEl.textContent=n>=2?'✦ x'+n:'';}
+
+function spawn(){
+  if(!S||S.words.length>=9)return;
+  const txt=WORDS[Math.floor(Math.random()*WORDS.length)];
+  if(S.words.find(w=>w.text===txt))return;
+  const x=5+Math.random()*82;
+  const baseSpd=22+S.level*5+Math.random()*12;
+  const spd=baseSpd*S.speedMult;
+  const col=COLORS[Math.floor(Math.random()*COLORS.length)];
+  const el=document.createElement('div');
+  el.className='word';
+  el.style.cssText=`left:${x}%;top:-40px;color:${col};background:${col}14;border:1px solid ${col}33;font-size:${13+Math.min(S.level-1,4)}px`;
+  el.textContent=txt;
+  wlayer.appendChild(el);
+  S.words.push({text:txt,y:-40,spd,color:col,el});
+}
+
+function start(){
+  if(raf)cancelAnimationFrame(raf);
+  wlayer.innerHTML='';
+  S={words:[],score:0,level:1,lives:3,combo:0,inp:'',spT:0,prog:0,pMax:8,wChars:0,t0:Date.now(),speedMult};
+  setLives(3);ssc.textContent='0';slv.textContent='1';swpm.textContent='0';
+  cmbEl.textContent='';lfill.style.width='0%';
+  overlay.style.display='none';
+  last=performance.now();
+  loop(last);
+}
+
+function end(){
+  cancelAnimationFrame(raf);
+  S.words.forEach(w=>w.el.remove());
+  otitle.textContent='Game Over';
+  otitle.style.color='#ef4444';
+  osub.style.display='none';
+  oscore.style.display='block';
+  ofinal.textContent=S.score;
+  obtn.textContent='▶ Play Again';
+  overlay.style.display='flex';
+}
+
+function loop(ts){
+  const dt=Math.min(ts-last,80);last=ts;
+  if(!S)return;
+
+  const si=Math.max(400,2200-(S.level-1)*180);
+  S.spT+=dt;
+  if(S.spT>=si){S.spT=0;spawn();}
+
+  for(let i=S.words.length-1;i>=0;i--){
+    const w=S.words[i];
+    w.y+=w.spd*(dt/1000);
+    w.el.style.top=w.y+'px';
+    if(w.y>396){
+      w.el.remove();S.words.splice(i,1);
+      S.lives--;S.combo=0;
+      if(S.inp&&getTarget()===w){S.inp='';renderCursor();}
+      setLives(S.lives);showCombo(0);
+      flash.style.opacity='1';setTimeout(()=>flash.style.opacity='0',180);
+      if(S.lives<=0){end();return;}
+    }
+  }
+
+  wpmT+=dt;
+  if(wpmT>1000){
+    const min=(Date.now()-S.t0)/60000;
+    swpm.textContent=min>0?Math.round((S.wChars/5)/min):0;
+    wpmT=0;
+  }
+  raf=requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown',e=>{
+  if(!S||overlay.style.display!=='none')return;
+  const k=e.key===';'?';':e.key.toLowerCase();
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    if(S.inp.length>0){S.inp=S.inp.slice(0,-1);renderCursor();}
+    return;
+  }
+  if(!HR.includes(k))return;
+  e.preventDefault();
+  const candidate=S.inp+k;
+  const hasMatch=S.words.some(w=>w.text.startsWith(candidate));
+  if(!hasMatch&&S.inp.length>0){
+    kflash(k,'miss');
+    S.inp=S.words.some(w=>w.text.startsWith(k))?k:'';
+    renderCursor();return;
+  }
+  kflash(k,'hit');
+  S.inp=candidate;S.wChars++;
+  const tgt=getTarget();
+  if(tgt&&S.inp===tgt.text){
+    const pts=(tgt.text.length*10*(1+S.combo*0.25))|0;
+    S.score+=pts;S.combo++;S.prog++;
+    ssc.textContent=S.score;showCombo(S.combo);
+    const need=S.pMax+S.level*3;
+    lfill.style.width=(S.prog/need*100)+'%';
+    if(S.prog>=need){S.level++;S.prog=0;S.pMax=need;slv.textContent=S.level;lfill.style.width='0%';}
+    tgt.el.remove();S.words.splice(S.words.indexOf(tgt),1);
+    S.inp='';
+  }
+  renderCursor();
+});
+
+obtn.addEventListener('click',start);
+</script>
